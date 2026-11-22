@@ -5,27 +5,33 @@ import { AnimatePresence, MotionConfig, motion, type Variants } from "motion/rea
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 
 /* ───────── edit these ───────── */
-const NAME = "Her Name";
-const FROM = "Your Name";
+const NAME = "MANDIRA 'MY LOVE'";
+const FROM = "SOMNATH";
 const MESSAGES = [
-  "You make ordinary days feel like they were designed on purpose.",
   "Your laugh is my favourite sound, and I'm still trying to cause it more often.",
-  "Another year of you being you, and the world is better for it.",
+  "You are the person I love most in my life..",
   `I don't need a perfect plan for the future. I just need you in it. — ${FROM}`,
 ];
-// Put images in /public/photos and set src: "/photos/1.jpg". Empty src shows a placeholder.
+// Put images in /public/images and set src: "/images/1.jpg". Empty src shows a placeholder.
 const PHOTOS = [
-  { src: "", cap: "Our first date", emoji: "📸", g: "from-[#ff8fab] to-[#c8b6ff]" },
-  { src: "", cap: "That trip", emoji: "🌅", g: "from-[#ffd6a5] to-[#ff8fab]" },
-  { src: "", cap: "Us being silly", emoji: "😜", g: "from-[#bde0fe] to-[#c8b6ff]" },
-  { src: "", cap: "My favourite you", emoji: "💞", g: "from-[#c8b6ff] to-[#ff5d8f]" },
+  { src: "/images/1.jpg", cap: "My favourite you", emoji: "📸", g: "from-[#ff8fab] to-[#c8b6ff]" },
+  { src: "/images/2.jpg", cap: "My favourite you", emoji: "🌅", g: "from-[#ffd6a5] to-[#ff8fab]" },
+  { src: "/images/3.jpg", cap: "Love it", emoji: "😜", g: "from-[#bde0fe] to-[#c8b6ff]" },
+  { src: "/images/4.jpg", cap: "My favourite you", emoji: "💞", g: "from-[#c8b6ff] to-[#ff5d8f]" },
+  { src: "/images/5.jpg", cap: "Love it", emoji: "📸", g: "from-[#ff8fab] to-[#c8b6ff]" },
+  { src: "/images/6.jpg", cap: "My favourite you", emoji: "🌅", g: "from-[#ffd6a5] to-[#ff8fab]" },
+  { src: "/images/7.jpg", cap: "Love it", emoji: "😜", g: "from-[#bde0fe] to-[#c8b6ff]" },
+  { src: "/images/8.jpg", cap: "My favourite you", emoji: "💞", g: "from-[#c8b6ff] to-[#ff5d8f]" },
 ];
+// Image cut into pieces for the puzzle. Any photo in /public/images (a square one works best).
+const PUZZLE_SRC = "/images/1.jpg";
+const PUZZLE_N = 3; // 3 = 3x3 pieces, 4 = 4x4 (harder)
 /* ────────────────────────────── */
 
 const serif = Cormorant_Garamond({ subsets: ["latin"], weight: ["300", "500"], style: ["normal", "italic"] });
 const sans = Outfit({ subsets: ["latin"], weight: ["300", "400"] });
 const COLORS = ["#ff8fab", "#c8b6ff", "#ffd6a5", "#bde0fe", "#fff1f2", "#ff5d8f"];
-const STAGES = ["gate", "cake", "wish", "photos", "tree", "propose"] as const;
+const STAGES = ["gate", "cake", "wish", "photos", "puzzle", "tree", "propose"] as const;
 type Stage = (typeof STAGES)[number];
 
 const pill = "rounded-full bg-[#ff8fab] px-9 py-3.5 text-base font-normal text-[#150d20]";
@@ -239,6 +245,24 @@ const ROTS = [-4, 5, -7, 6, -3, 4];
 function PhotoStage({ onDone }: { onDone: () => void }) {
   const [order, setOrder] = useState(PHOTOS.map((_, i) => i));
   const [flying, setFlying] = useState<number | null>(null);
+  const [intro, setIntro] = useState(true);
+
+  // stagger delay only for the first entrance
+  useEffect(() => {
+    const t = setTimeout(() => setIntro(false), 1500);
+    return () => clearTimeout(t);
+  }, []);
+
+  const flip = (id: number) => {
+    if (flying !== null) return;
+    setFlying(id);
+    // don't rely on onAnimationComplete: move the card to the back on a timer
+    setTimeout(() => {
+      setOrder((o) => [...o.slice(1), o[0]]);
+      setFlying(null);
+    }, 350);
+  };
+
   return (
     <div className="flex flex-col items-center">
       <div className="relative h-[min(52dvh,330px)] w-[min(70vw,260px)]">
@@ -246,15 +270,27 @@ function PhotoStage({ onDone }: { onDone: () => void }) {
           const pos = order.indexOf(id);
           const isFly = flying === id;
           return (
-            <motion.div key={id} onClick={() => pos === 0 && flying === null && setFlying(id)}
+            <motion.div
+              key={id}
+              onClick={() => pos === 0 && flip(id)}
               className="absolute inset-0 flex cursor-pointer flex-col rounded-md bg-white px-3 pt-3 text-[#2a1a33] shadow-2xl"
               style={{ zIndex: PHOTOS.length - pos }}
               initial={{ y: 400, opacity: 0, rotate: 0 }}
-              animate={isFly ? { x: 340, rotate: 30, opacity: 0 } : { x: 0, y: pos * 8, rotate: ROTS[pos % ROTS.length], scale: 1 - pos * 0.04, opacity: 1 }}
-              transition={{ type: "spring", damping: 16, stiffness: 120, delay: flying === null && !isFly ? id * 0.12 : 0 }}
-              onAnimationComplete={() => { if (isFly) { setOrder((o) => [...o.slice(1), o[0]]); setFlying(null); } }}>
-              <div className={`flex flex-1 items-center justify-center rounded-sm bg-gradient-to-br text-6xl ${p.g}`}
-                style={p.src ? { backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
+              animate={
+                isFly
+                  ? { x: 340, y: 0, rotate: 30, opacity: 0, scale: 1 }
+                  : { x: 0, y: pos * 8, rotate: ROTS[pos % ROTS.length], scale: 1 - pos * 0.04, opacity: 1 }
+              }
+              transition={
+                isFly
+                  ? { duration: 0.35, ease: "easeIn" }
+                  : { type: "spring", damping: 16, stiffness: 120, delay: intro ? id * 0.12 : 0 }
+              }
+            >
+              <div
+                className={`flex flex-1 items-center justify-center rounded-sm bg-gradient-to-br text-6xl ${p.g}`}
+                style={p.src ? { backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+              >
                 {!p.src && p.emoji}
               </div>
               <p className={`${serif.className} py-3 text-xl italic`}>{p.cap}</p>
@@ -263,12 +299,140 @@ function PhotoStage({ onDone }: { onDone: () => void }) {
         })}
       </div>
       <p className="mt-4 text-sm text-[#c8b6ff]">Tap a photo to flip through</p>
-      <motion.button onClick={onDone} className={`${pill} mt-6`} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }}>One more thing ›</motion.button>
+      <motion.button onClick={onDone} className={`${pill} mt-6`} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }}>
+        One more thing ›
+      </motion.button>
     </div>
   );
 }
 
-/* ── stage 5: the heart tree ── */
+/* ── stage 5: picture puzzle (tap two pieces to swap them) ── */
+function shufflePieces(n: number) {
+  const total = n * n;
+  let a: number[];
+  do {
+    a = Array.from({ length: total }, (_, i) => i);
+    for (let i = total - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+  } while (a.every((p, i) => p === i));
+  return a;
+}
+
+function PuzzleStage({ onDone }: { onDone: () => void }) {
+  const N = PUZZLE_N;
+  const [tiles, setTiles] = useState<number[]>(() => shufflePieces(N));
+  const [sel, setSel] = useState<number | null>(null);
+  const [moves, setMoves] = useState(0);
+  const [bursts, setBursts] = useState<BurstT[]>([]);
+  const [cKey, setCKey] = useState(0);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const solved = tiles.every((p, i) => p === i);
+  const addBurst = (x: number, y: number) => setBursts((b) => [...b, { id: Math.random(), x, y, big: true }]);
+
+  // blast: flash, confetti x3, firework hearts around the picture, heart rain
+  useEffect(() => {
+    if (!solved) return;
+    setCKey(1);
+    const t1 = setTimeout(() => setCKey(2), 700);
+    const t2 = setTimeout(() => setCKey(3), 1500);
+    const r = boardRef.current?.getBoundingClientRect();
+    if (r) addBurst(r.left + r.width / 2, r.top + r.height / 2);
+    const iv = setInterval(() => {
+      const b = boardRef.current?.getBoundingClientRect();
+      if (!b) return;
+      addBurst(b.left + Math.random() * b.width, b.top + Math.random() * b.height);
+    }, 450);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearInterval(iv); };
+  }, [solved]);
+
+  const tap = (pos: number) => {
+    if (solved) return;
+    if (sel === null) return setSel(pos);
+    if (sel === pos) return setSel(null);
+    setTiles((t) => {
+      const n = [...t];
+      [n[sel], n[pos]] = [n[pos], n[sel]];
+      return n;
+    });
+    setMoves((m) => m + 1);
+    setSel(null);
+  };
+  const reshuffle = () => { setTiles(shufflePieces(N)); setSel(null); setMoves(0); };
+
+  return (
+    <div className="flex flex-col items-center">
+      {solved && (
+        <>
+          <motion.div className="pointer-events-none fixed inset-0 z-[65] bg-white" initial={{ opacity: 0.85 }} animate={{ opacity: 0 }} transition={{ duration: 0.7 }} />
+          {cKey > 0 && <Confetti key={cKey} />}
+          <HeartRain />
+        </>
+      )}
+      {bursts.map((b) => <Burst key={b.id} {...b} onDone={() => setBursts((all) => all.filter((x) => x.id !== b.id))} />)}
+
+      <motion.h2 className={`${serif.className} mb-1 text-[clamp(1.8rem,7vw,2.6rem)] font-light italic`}
+        key={String(solved)} initial={{ scale: solved ? 0.3 : 1, opacity: 0 }}
+        animate={solved ? { scale: [0.3, 1.25, 1], opacity: 1, rotate: [-6, 4, 0] } : { scale: 1, opacity: 1 }}
+        transition={{ duration: solved ? 0.8 : 0.4 }}>
+        {solved ? "You did it ♥" : "Put us back together"}
+      </motion.h2>
+      <p className="mb-4 text-sm text-[#c8b6ff]">
+        {solved ? `Solved in ${moves} moves` : "Tap one piece, then another to swap them"}
+      </p>
+
+      <div ref={boardRef} className="relative aspect-square w-[min(84vw,320px,calc(48dvh))]">
+        {/* glowing pulse behind the picture once it is complete */}
+        {solved && (
+          <motion.div className="pointer-events-none absolute -inset-3 rounded-xl bg-gradient-to-br from-[#ff8fab] to-[#c8b6ff] blur-xl"
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: [0, 0.9, 0.5], scale: [0.9, 1.15, 1.08] }} transition={{ duration: 1.2 }} />
+        )}
+        <motion.div className={`relative grid h-full w-full overflow-hidden rounded-md bg-white/10 shadow-2xl ${solved ? "gap-0" : "gap-[3px]"}`}
+          style={{ gridTemplateColumns: `repeat(${N}, 1fr)`, gridTemplateRows: `repeat(${N}, 1fr)` }}
+          animate={solved ? { scale: [1, 1.1, 1], rotate: [0, -2, 2, 0] } : { scale: 1 }} transition={{ duration: 0.9, delay: 0.3 }}>
+          {tiles.map((piece, pos) => {
+            const r = Math.floor(piece / N), c = piece % N;
+            return (
+              <motion.button key={piece} layout
+                transition={solved ? { duration: 0.5, delay: pos * 0.05 } : { type: "spring", damping: 20, stiffness: 260 }}
+                onClick={() => tap(pos)} aria-label={`Puzzle piece ${pos + 1}`}
+                className={`relative cursor-pointer bg-gradient-to-br from-[#ff8fab] to-[#c8b6ff] outline-none ${sel === pos ? "z-10 ring-2 ring-inset ring-white" : ""}`}
+                style={{
+                  backgroundImage: `url(${PUZZLE_SRC})`,
+                  backgroundSize: `${N * 100}% ${N * 100}%`,
+                  backgroundPosition: `${(c / (N - 1)) * 100}% ${(r / (N - 1)) * 100}%`,
+                }}
+                animate={solved ? { scale: [1, 1.18, 1] } : { scale: sel === pos ? 0.93 : 1 }} />
+            );
+          })}
+        </motion.div>
+        {/* shine sweeping across the finished picture */}
+        {solved && (
+          <motion.div className="pointer-events-none absolute inset-0 overflow-hidden rounded-md">
+            <motion.div className="absolute -inset-y-4 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent"
+              initial={{ x: "-150%" }} animate={{ x: "450%" }} transition={{ duration: 1.1, delay: 0.9, ease: "easeInOut" }} />
+          </motion.div>
+        )}
+      </div>
+
+      <div className="mt-5 flex items-center gap-3">
+        {!solved && (
+          <button onClick={reshuffle} className="rounded-full border border-[#c8b6ff]/50 px-6 py-2.5 text-sm text-[#c8b6ff]">Shuffle</button>
+        )}
+      </div>
+      <motion.button onClick={onDone} className={`${pill} mt-5`} initial={{ opacity: 0 }} animate={{ opacity: solved ? 1 : 0 }}
+        transition={{ delay: solved ? 1.5 : 0 }} style={{ pointerEvents: solved ? "auto" : "none" }} whileHover={{ scale: 1.08 }}>
+        One more thing ›
+      </motion.button>
+      {!solved && (
+        <button onClick={onDone} className="mt-3 text-xs text-white/40 underline">Skip</button>
+      )}
+    </div>
+  );
+}
+
+/* ── stage 6: the heart tree ── */
 function canopy(n: number) {
   const pts: { x: number; y: number }[] = [];
   while (pts.length < n) {
@@ -434,7 +598,7 @@ function TreeStage({ onDone }: { onDone: () => void }) {
 
 /* ── stage 6: the proposal (tap the heart → letter → question) ── */
 const LETTER =
-  "Every year with you feels like the best chapter yet. You turned my ordinary days into the ones I never want to forget. So on your birthday, I want to ask you something I have been carrying in my heart for a long time.";
+  "Meeting you this year was the best thing that happened to me. Every moment with you feels special, and I never want to lose you, no matter what situation life brings. I want you by my side in every chapter of my life. Happy Birthday! ❤️🎂. I want to ask you something I have been carrying in my heart for a long time.";
 const NO_TEXTS = ["No", "Are you sure?", "Think again 🥺", "Really??", "Try Yes 😌"];
 const rc = () => COLORS[Math.floor(Math.random() * COLORS.length)];
 
@@ -644,7 +808,8 @@ export default function BirthdayPage() {
             )}
             {stage === "cake" && <CakeStage onDone={() => go("wish")} />}
             {stage === "wish" && <WishStage onDone={() => go("photos")} />}
-            {stage === "photos" && <PhotoStage onDone={() => go("tree")} />}
+            {stage === "photos" && <PhotoStage onDone={() => go("puzzle")} />}
+            {stage === "puzzle" && <PuzzleStage onDone={() => go("tree")} />}
             {stage === "tree" && <TreeStage onDone={() => go("propose")} />}
             {stage === "propose" && <ProposeStage />}
           </motion.section>
